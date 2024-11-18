@@ -1,0 +1,75 @@
+index.php
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Livraria</title>
+</head>
+<body>
+    <h1>Livros</h1>
+    <form action="add_book.php" method="post">
+        <input type="text" name="titulo" placeholder="Título" required>
+        <input type="text" name="autor" placeholder="Autor" required>
+        <input type="number" name="ano" placeholder="Ano de Publicação" required>
+        <button type="submit">Adicionar Livro</button>
+    </form>
+    <h2>Lista de Livros</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th><th>Título</th><th>Autor</th><th>Ano</th><th>Ações</th>
+        </tr>
+        <?php
+        require 'database.php';
+        $result = $db->query("SELECT * FROM livros");
+        foreach($result as $row) {
+            echo "<tr>
+                    <td>{$row['id']}</td>
+                    <td>{$row['titulo']}</td>
+                    <td>{$row['autor']}</td>
+                    <td>{$row['ano']}</td>
+                    <td><a href='delete_book.php?id={$row['id']}'>Excluir</a></td>
+                  </tr>";
+        }
+        ?>
+    </table>
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------
+add_book.php
+
+<?php
+require 'database.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $titulo = $_POST['titulo'];
+    $autor = $_POST['autor'];
+    $ano = $_POST['ano'];
+    $stmt = $db->prepare("INSERT INTO livros (titulo, autor, ano) VALUES (?, ?, ?)");
+    $stmt->execute([$titulo, $autor, $ano]);
+    header("Location: index.php");
+}
+?>
+-------------------------------------------------------------------------------------------------------------
+database.php
+
+<?php
+$db = new PDO('sqlite:livraria.db');
+$db->exec("CREATE TABLE IF NOT EXISTS livros (
+    id INTEGER PRIMARY KEY,
+    titulo TEXT,
+    autor TEXT,
+    ano INTEGER
+)");
+?>
+------------------------------------------------------------------------------------------------------------
+delete_book.php
+
+<?php
+require 'database.php';
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $stmt = $db->prepare("DELETE FROM livros WHERE id = ?");
+    $stmt->execute([$id]);
+    header("Location: index.php");
+}
+?>
